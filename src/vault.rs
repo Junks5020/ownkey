@@ -25,6 +25,15 @@ pub struct PasswordOptions<'a> {
     pub no_session: bool,
 }
 
+pub fn warn_if_insecure_cli_password(opts: &PasswordOptions<'_>) {
+    if opts.password.is_some() {
+        eprintln!(
+            "Warning: providing --password on the command line may expose it in shell history or process listings. \
+Prefer leaving --password empty and entering it interactively when prompted."
+        );
+    }
+}
+
 impl<'a> PasswordOptions<'a> {
     pub fn new(password: Option<&'a str>, vault_path: &'a str) -> Self {
         Self {
@@ -230,4 +239,105 @@ fn derive_key_bytes(password: &str, salt: &[u8]) -> [u8; 32] {
     let mut key = [0u8; 32];
     pbkdf2_hmac::<Sha256>(password.as_bytes(), salt, 100_000, &mut key);
     key
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::collections::HashMap;
+    use std::fs;
+    use std::path::PathBuf;
+
+    fn temp_vault_path(name: &str) -> PathBuf {
+        let mut path = std::env::temp_dir();
+        path.push(format!("ownkey_vault_unit_{name}_{}", std::process::id()));
+        path
+    }
+
+    #[test]
+    fn encrypt_decrypt_round_trip_works() {
+        let mut entries = HashMap::new();
+        entries.insert("key1".to_string(), "secret1".to_string());
+        entries.insert("key2".to_string(), "secret2".to_string());
+        let vault = Vault { entries: entries.clone() };
+
+        let password = "testpw";
+        let encrypted = encrypt_vault(&vault, password).expect("encrypt_vault should succeed");
+        assert!(!encrypted.ciphertext.is_empty(), "ciphertext should not be empty");
+
+        let salt_bytes = general_purpose::STANDARD
+            .decode(&encrypted.salt)
+            .expect("salt should be valid base64");
+        let key_bytes = derive_key_bytes(password, &salt_bytes);
+        let decrypted =
+            decrypt_vault_with_key(&encrypted, &key_bytes).expect("decrypt_vault_with_key should succeed");
+
+        assert_eq!(decrypted.entries, entries);
+    }
+
+    #[test]
+    fn decrypt_with_wrong_password_fails() {
+        let mut entries = HashMap::new();
+        entries.insert("key".to_string(), "secret".to_string());
+        let vault = Vault { entries };
+
+        let encrypted =
+            encrypt_vault(&vault, "correct_pw").expect("encrypt_vault should succeed with correct_pw");
+        let salt_bytes = general_purpose::STANDARD
+            .decode(&encrypted.salt)
+            .expect("salt should be valid base64");
+        let wrong_key_bytes = derive_key_bytes("wrong_pw", &salt_bytes);
+
+        let result = decrypt_vault_with_key(&encrypted, &wrong_key_bytes);
+        assert!(result.is_err(), "decrypt_vault_with_key should fail with wrong password");
+    }
+
+    #[test]
+    fn corrupt_ciphertext_cannot_be_decrypted() {
+        let mut entries = HashMap::new();
+        entries.insert("key".to_string(), "secret".to_string());
+        let vault = Vault { entries };
+
+        let encrypted = encrypt_vault(&vault, "pw").expect("encrypt_vault should succeed");
+
+        // Corrupt the ciphertext by truncating it.
+        let corrupted = EncryptedVault {
+            salt: encrypted.salt.clone(),
+            nonce: encrypted.nonce.clone(),
+            ciphertext: encrypted
+                .ciphertext
+                .chars()
+                .take(encrypted.ciphertext.len().saturating_sub(4))
+                .collect(),
+        };
+
+        let salt_bytes = general_purpose::STANDARD
+            .decode(&corrupted.salt)
+            .expect("salt should be valid base64");
+        let key_bytes = derive_key_bytes("pw", &salt_bytes);
+
+        let result = decrypt_vault_with_key(&corrupted, &key_bytes);
+        assert!(result.is_err(), "decrypt_vault_with_key should fail for corrupted ciphertext");
+    }
+
+    #[test]
+    fn load_vault_with_password_fails_for_corrupted_file() {
+        let path = temp_vault_path("corrupted");
+        let path_str = path.to_string_lossy().to_string();
+
+        fs::write(&path, "this is not valid json").expect("should be able to write test file");
+
+        let opts = PasswordOptions {
+            password: Some("testpw"),
+            keychain_account: None,
+            keychain_service: "ownkey",
+            vault_path: &path_str,
+            no_session: true,
+        };
+
+        let result = load_vault_with_password(&path_str, &opts);
+        assert!(result.is_err(), "loading corrupted vault file should fail");
+
+        let _ = fs::remove_file(&path);
+    }
 }

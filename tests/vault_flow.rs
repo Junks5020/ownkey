@@ -169,6 +169,7 @@ fn delete_removes_item() {
         .arg(path.to_str().unwrap())
         .arg("--password")
         .arg("testpw")
+        .arg("--yes")
         .arg("gj_key")
         .status()
         .expect("failed to run ownkey delete");
