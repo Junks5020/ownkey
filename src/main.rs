@@ -35,6 +35,8 @@ fn run() -> Result<()> {
         Commands::Add(args) => commands::add::handle(args)?,
         Commands::List(args) => commands::list::handle(args)?,
         Commands::View(args) => commands::view::handle(args)?,
+        Commands::Copy(args) => commands::copy::handle(args)?,
+        Commands::RotatePassword(args) => commands::rotate_password::handle(args)?,
         Commands::Delete(args) => commands::delete::handle(args)?,
         Commands::Search(args) => commands::search::handle(args)?,
         Commands::RestoreBackup => commands::restore::handle()?,

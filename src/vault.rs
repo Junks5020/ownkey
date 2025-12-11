@@ -155,6 +155,13 @@ pub fn ensure_vault_exists_with_password(path: &str, opts: &PasswordOptions<'_>)
     )?;
     if let Some(account) = opts.keychain_account {
         let _ = keychain::store_password(opts.keychain_service, account, &pass);
+    } else {
+        #[cfg(target_os = "macos")]
+        {
+            if let Ok(username) = std::env::var("USER") {
+                let _ = keychain::store_password(opts.keychain_service, &username, &pass);
+            }
+        }
     }
     Ok(())
 }
@@ -175,12 +182,24 @@ fn get_password(opts: &PasswordOptions<'_>) -> Result<String> {
             return Ok(pw);
         }
     }
+    #[cfg(target_os = "macos")]
+    {
+        if opts.keychain_account.is_none() {
+            if let Ok(username) = std::env::var("USER") {
+                if let Ok(Some(pw)) =
+                    keychain::retrieve_password(opts.keychain_service, &username)
+                {
+                    return Ok(pw);
+                }
+            }
+        }
+    }
     let password =
         rpassword::prompt_password("Enter vault password: ").with_context(|| "password prompt")?;
     Ok(password)
 }
 
-fn prompt_new_password() -> Result<String> {
+pub fn prompt_new_password() -> Result<String> {
     let first = rpassword::prompt_password("Set a new vault password: ")
         .with_context(|| "password prompt")?;
     let second = rpassword::prompt_password("Confirm password: ")

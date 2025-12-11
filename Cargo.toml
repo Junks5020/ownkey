@@ -11,6 +11,7 @@ rpassword = "7.3"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 toml = "0.8"
+arboard = "3"
 uuid = { version = "1.7", features = ["v4", "serde"] }
 security-framework = { version = "2", optional = true }
 directories = "5"

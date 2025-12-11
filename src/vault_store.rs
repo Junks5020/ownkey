@@ -1,7 +1,7 @@
 use std::fs::{self, OpenOptions};
 use std::io::{Read, Write};
 #[cfg(unix)]
-use std::os::unix::fs::PermissionsExt;
+use std::os::unix::fs::{OpenOptionsExt, PermissionsExt};
 use std::path::{Path, PathBuf};
 
 use anyhow::{anyhow, Context, Result};
@@ -27,10 +27,13 @@ fn backup_path() -> Result<PathBuf> {
 
 pub fn lock_and_read(path: &Path) -> Result<String> {
     prepare_parent(path)?;
-    let file = OpenOptions::new()
-        .create(true)
-        .read(true)
-        .write(true)
+    let mut open = OpenOptions::new();
+    open.create(true).read(true).write(true);
+    #[cfg(unix)]
+    {
+        open.mode(0o600);
+    }
+    let file = open
         .open(path)
         .with_context(|| format!("failed to open vault at {}", path.display()))?;
     let mut lock = RwLock::new(file);
@@ -48,10 +51,13 @@ pub fn lock_and_read(path: &Path) -> Result<String> {
 
 pub fn lock_and_write(path: &Path, contents: &str) -> Result<()> {
     prepare_parent(path)?;
-    let file = OpenOptions::new()
-        .create(true)
-        .read(true)
-        .write(true)
+    let mut open = OpenOptions::new();
+    open.create(true).read(true).write(true);
+    #[cfg(unix)]
+    {
+        open.mode(0o600);
+    }
+    let file = open
         .open(path)
         .with_context(|| format!("failed to open vault at {}", path.display()))?;
     let mut lock = RwLock::new(file);
@@ -90,10 +96,13 @@ pub fn atomic_write(path: &Path, contents: &str) -> Result<()> {
         .unwrap_or_else(|| PathBuf::from(tmp_name.clone()));
 
     {
-        let mut f = OpenOptions::new()
-            .create(true)
-            .write(true)
-            .truncate(true)
+        let mut open = OpenOptions::new();
+        open.create(true).write(true).truncate(true);
+        #[cfg(unix)]
+        {
+            open.mode(0o600);
+        }
+        let mut f = open
             .open(&tmp_path)
             .with_context(|| format!("failed to open temp file {}", tmp_path.display()))?;
         f.write_all(contents.as_bytes())

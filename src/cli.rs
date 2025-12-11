@@ -26,10 +26,15 @@ pub enum Commands {
     List(ListArgs),
     /// View a secret by key
     View(ViewArgs),
+    /// Copy a secret by key to clipboard
+    Copy(CopyArgs),
     /// Delete a secret by key
     Delete(DeleteArgs),
     /// Search secrets by keyword in key or value
     Search(SearchArgs),
+    /// Rotate the vault encryption password
+    #[command(name = "rotate-password")]
+    RotatePassword(RotatePasswordArgs),
     /// Restore the encrypted backup over the current vault (hidden)
     #[command(name = "restore-backup", hide = true)]
     RestoreBackup,
@@ -129,6 +134,27 @@ pub struct ViewArgs {
 }
 
 #[derive(clap::Args, Debug)]
+pub struct CopyArgs {
+    /// Optional path to the vault file
+    #[arg(short, long)]
+    pub path: Option<String>,
+    /// Key to copy
+    pub key: String,
+    /// Optional password (falls back to interactive prompt; using --password may leak in shell history)
+    #[arg(long)]
+    pub password: Option<String>,
+    /// Optional keychain account name (macOS only)
+    #[arg(long)]
+    pub keychain_account: Option<String>,
+    /// Keychain service name (macOS only)
+    #[arg(long, default_value = "ownkey")]
+    pub keychain_service: String,
+    /// Disable session cache usage for this command
+    #[arg(long)]
+    pub no_session: bool,
+}
+
+#[derive(clap::Args, Debug)]
 pub struct DeleteArgs {
     /// Optional path to the vault file
     #[arg(short, long)]
@@ -171,9 +197,31 @@ pub struct SearchArgs {
     /// Disable session cache usage for this command
     #[arg(long)]
     pub no_session: bool,
-    /// Only print exact key names (no previews)
+    /// Reserved for future behavior (currently has no effect)
     #[arg(long)]
     pub exact: bool,
+}
+
+#[derive(clap::Args, Debug)]
+pub struct RotatePasswordArgs {
+    /// Optional path to the vault file
+    #[arg(short, long)]
+    pub path: Option<String>,
+    /// Optional current password (falls back to interactive prompt)
+    #[arg(long)]
+    pub password: Option<String>,
+    /// New password to set (if omitted, will be prompted for interactively)
+    #[arg(long = "new-password")]
+    pub new_password: Option<String>,
+    /// Optional keychain account name (macOS only)
+    #[arg(long)]
+    pub keychain_account: Option<String>,
+    /// Keychain service name (macOS only)
+    #[arg(long, default_value = "ownkey")]
+    pub keychain_service: String,
+    /// Disable session cache usage for this command
+    #[arg(long)]
+    pub no_session: bool,
 }
 
 #[derive(clap::Args, Debug)]

@@ -112,6 +112,16 @@ ownkey search --path ./vault.json --password testpw gj
 ownkey search --path ./vault.json --password testpw --exact gj
 ```
 
+### 复制条目到剪贴板
+
+```bash
+ownkey copy --path ./vault.json --password testpw gj_key
+```
+
+- 若 key 存在：将对应的 value 写入系统剪贴板，并打印提示  
+  `Value for key 'gj_key' copied to clipboard.`
+- 若 key 不存在：返回错误并提示 `No entry found for key gj_key`。
+
 ## 密码与安全说明
 
 ### 密码输入方式

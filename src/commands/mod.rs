@@ -5,3 +5,5 @@ pub mod list;
 pub mod search;
 pub mod view;
 pub mod restore;
+pub mod copy;
+pub mod rotate_password;

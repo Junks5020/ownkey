@@ -31,15 +31,8 @@ pub fn handle(args: SearchArgs) -> Result<()> {
             k.to_lowercase().contains(&keyword) || v.to_lowercase().contains(&keyword)
         });
 
-    if args.exact {
-        for (k, _) in matches {
-            println!("{k}");
-        }
-    } else {
-        for (k, v) in matches {
-            let preview: String = v.chars().take(12).collect();
-            println!("{k}: {preview}");
-        }
+    for (k, _) in matches {
+        println!("{k}");
     }
 
     Ok(())
