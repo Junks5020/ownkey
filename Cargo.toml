@@ -2,6 +2,15 @@
 name = "ownkey"
 version = "0.1.0"
 edition = "2021"
+description = "A developer-friendly CLI password manager for managing API keys, tokens, and secrets with local encryption"
+license = "MIT"
+repository = "https://github.com/liujinxu/ownkey"
+homepage = "https://github.com/liujinxu/ownkey"
+readme = "README.md"
+keywords = ["password-manager", "cli", "encryption", "secrets", "vault"]
+categories = ["command-line-utilities", "cryptography"]
+authors = ["liujinxu"]
+rust-version = "1.70"
 
 [dependencies]
 anyhow = "1.0"

@@ -6,7 +6,6 @@ use anyhow::{Context, Result};
 use base64::{engine::general_purpose, Engine as _};
 use pbkdf2::pbkdf2_hmac;
 use rand::RngCore;
-use rpassword;
 use serde::{Deserialize, Serialize};
 use serde_json::{self, Value};
 use sha2::Sha256;
@@ -35,6 +34,9 @@ Prefer leaving --password empty and entering it interactively when prompted."
 }
 
 impl<'a> PasswordOptions<'a> {
+    /// Create a new PasswordOptions with minimal configuration.
+    /// This is a convenience constructor for simple use cases.
+    #[allow(dead_code)]
     pub fn new(password: Option<&'a str>, vault_path: &'a str) -> Self {
         Self {
             password,
@@ -46,14 +48,23 @@ impl<'a> PasswordOptions<'a> {
     }
 }
 
+/// Convenience wrapper for load_vault_with_password with default options.
+/// Reserved for library usage or simpler scripting scenarios.
+#[allow(dead_code)]
 pub fn load_vault(path: &str) -> Result<Vault> {
     load_vault_with_password(path, &PasswordOptions::new(None, path))
 }
 
+/// Convenience wrapper for save_vault_with_password with default options.
+/// Reserved for library usage or simpler scripting scenarios.
+#[allow(dead_code)]
 pub fn save_vault(path: &str, vault: &Vault) -> Result<()> {
     save_vault_with_password(path, vault, &PasswordOptions::new(None, path))
 }
 
+/// Convenience wrapper for ensure_vault_exists_with_password with default options.
+/// Reserved for library usage or simpler scripting scenarios.
+#[allow(dead_code)]
 pub fn ensure_vault_exists(path: &str) -> Result<()> {
     ensure_vault_exists_with_password(path, &PasswordOptions::new(None, path))
 }

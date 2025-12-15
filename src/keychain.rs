@@ -24,6 +24,7 @@ mod platform {
         }
     }
 
+    #[allow(dead_code)]
     pub fn delete_password(service: &str, account: &str) -> Result<()> {
         let _ = delete_generic_password(service, account);
         Ok(())
@@ -47,4 +48,10 @@ mod platform {
     }
 }
 
-pub use platform::{delete_password, retrieve_password, store_password};
+pub use platform::{retrieve_password, store_password};
+
+// delete_password is available but not currently used by the CLI.
+// Keeping the implementation for future use (e.g., keychain cleanup commands).
+#[allow(unused_imports)]
+pub use platform::delete_password;
+
