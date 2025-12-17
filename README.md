@@ -4,27 +4,59 @@
 
 当前仓库已经实现了完整可用的本地加密 vault、基础 CLI 命令以及可靠的文件读写与权限控制。后续还可以在此基础上继续扩展同步、团队协作等能力。
 
-## 安装与构建
+## 安装
 
-前置要求：
+### 方式一：使用 Cargo 安装（推荐）
 
-- Rust 稳定版（建议通过 `rustup` 安装）
-
-克隆并构建：
+如果你已安装 Rust，可以直接从 GitHub 安装：
 
 ```bash
-git clone <this-repo-url> ownkey
+cargo install --git https://github.com/liujinxu/ownkey
+```
+
+安装完成后，`ownkey` 命令将可在终端中使用。
+
+### 方式二：从 crates.io 安装
+
+```bash
+cargo install ownkey
+```
+
+### 方式三：下载预编译二进制
+
+从 [Releases](https://github.com/liujinxu/ownkey/releases) 页面下载适合你系统的预编译版本：
+
+| 系统 | 文件 |
+|------|------|
+| macOS (Apple Silicon) | `ownkey-aarch64-apple-darwin.tar.gz` |
+| macOS (Intel) | `ownkey-x86_64-apple-darwin.tar.gz` |
+| Linux (x64) | `ownkey-x86_64-unknown-linux-gnu.tar.gz` |
+| Windows (x64) | `ownkey-x86_64-pc-windows-msvc.zip` |
+
+下载后解压并将 `ownkey` 可执行文件移动到 PATH 中的目录（如 `/usr/local/bin`）。
+
+### 方式四：从源码编译
+
+```bash
+# 克隆仓库
+git clone https://github.com/liujinxu/ownkey.git
 cd ownkey
-cargo build
+
+# 编译 release 版本
+cargo build --release
+
+# 可执行文件位于 target/release/ownkey
+# 可以将其复制到 PATH 中
+cp target/release/ownkey /usr/local/bin/
 ```
 
-查看帮助：
+### 验证安装
 
 ```bash
-cargo run -- --help
+ownkey --help
 ```
 
-运行测试：
+### 运行测试（面向开发者）
 
 ```bash
 cargo test
